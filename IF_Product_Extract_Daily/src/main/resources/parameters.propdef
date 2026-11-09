@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><parameters><parameter>
+    <key/>
+    <name>OData_Service_URL</name>
+    <type>xsd:string</type>
+    <isRequired>false</isRequired>
+    <constraint/>
+    <description/>
+    <additionalMetadata/>
+  </parameter><parameter>
+    <key/>
+    <name>MAIL_FROM</name>
+    <type>xsd:string</type>
+    <isRequired>false</isRequired>
+    <constraint/>
+    <description/>
+    <additionalMetadata/>
+  </parameter><parameter>
+    <key/>
+    <name>MAIL_TO</name>
+    <type>xsd:string</type>
+    <isRequired>false</isRequired>
+    <constraint/>
+    <description/>
+    <additionalMetadata/>
+  </parameter><parameter>
+    <key/>
+    <name>TIMEOUT</name>
+    <type>xsd:integer</type>
+    <isRequired>false</isRequired>
+    <constraint/>
+    <description/>
+    <additionalMetadata/>
+  </parameter><param_references><reference attribute_category="Mail_Receiver" attribute_id="ctype::AdapterVariant/cname::Mail/tp::SMTP/mp::None/direction::Receiver/version::1.13.0/attrId::from" attribute_uilabel="From" param_key="MAIL_FROM"/><reference attribute_category="Mail_Receiver" attribute_id="ctype::AdapterVariant/cname::Mail/tp::SMTP/mp::None/direction::Receiver/version::1.13.0/attrId::to" attribute_uilabel="To" param_key="MAIL_TO"/><reference attribute_category="Northwind_OData.Receiver.System" attribute_id="ctype::AdapterVariant/cname::HCIOData/tp::HTTP/mp::OData V2/direction::Receiver/version::1.32.1/attrId::address" attribute_uilabel="Address" param_key="OData_Service_URL"/><reference attribute_category="Northwind_OData" attribute_id="ctype::AdapterVariant/cname::HCIOData/tp::HTTP/mp::OData V2/direction::Receiver/version::1.32.1/attrId::maxIdleTimeout" attribute_uilabel="Idle Timeout (in seconds)" param_key="TIMEOUT"/><reference attribute_category="Admin_Mail" attribute_id="ctype::AdapterVariant/cname::Mail/tp::SMTP/mp::None/direction::Receiver/version::1.13.0/attrId::from" attribute_uilabel="From" param_key="MAIL_FROM"/><reference attribute_category="Admin_Mail" attribute_id="ctype::AdapterVariant/cname::Mail/tp::SMTP/mp::None/direction::Receiver/version::1.13.0/attrId::to" attribute_uilabel="To" param_key="MAIL_TO"/></param_references></parameters>

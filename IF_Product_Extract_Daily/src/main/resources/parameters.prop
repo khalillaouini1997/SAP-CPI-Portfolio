@@ -1,0 +1,5 @@
+#Mon Nov 09 10:11:54 UTC 2026
+MAIL_FROM=work.khalilos@gmail.com
+MAIL_TO=laouinikhalil@gmail.com
+OData_Service_URL=https\://services.odata.org/V2/Northwind/Northwind.svc
+TIMEOUT=30000

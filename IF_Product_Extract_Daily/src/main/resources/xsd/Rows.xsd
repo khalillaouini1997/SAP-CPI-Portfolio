@@ -1,0 +1,10 @@
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="unqualified">
+  <xs:element name="Rows"><xs:complexType><xs:sequence>
+    <xs:element name="Row" maxOccurs="unbounded"><xs:complexType><xs:sequence>
+      <xs:element name="ProductID" type="xs:string"/>
+      <xs:element name="Name" type="xs:string"/>
+      <xs:element name="Price" type="xs:string"/>
+      <xs:element name="Stock" type="xs:string"/>
+    </xs:sequence></xs:complexType></xs:element>
+  </xs:sequence></xs:complexType></xs:element>
+</xs:schema>
