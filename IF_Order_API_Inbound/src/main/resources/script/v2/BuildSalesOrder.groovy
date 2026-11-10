@@ -3,9 +3,8 @@
 package script.v2
 
 import com.sap.it.script.v2.api.Message
-import groovy.json.JsonSlurper
-import groovy.xml.XmlUtil
-import java.math.RoundingMode
+import groovy.json.JsonOutput
+import groovy.xml.XmlSlurper
 
 class BusinessException extends Exception {
     int status
@@ -13,34 +12,43 @@ class BusinessException extends Exception {
 }
 
 def Message processData(Message message) {
-    // stream the product JSON instead of loading it as one String
-    Reader reader = message.getBody(java.io.Reader)
-    if (reader == null) throw new IllegalStateException("Product response is empty")
-    def p
-    reader.withCloseable { r -> p = new JsonSlurper().parse(r) }
-    if (p.price == null) throw new IllegalStateException("Product response has no price")
+    // body = gathered XML (multimap:Messages) containing one <line> per item
+    def xml   = new XmlSlurper().parseText(message.getBody(String))
+    def lines = xml.'**'.findAll { it.name() == 'line' }
 
-    int idx = (message.getProperty("CamelSplitIndex") ?: 0) as int
-    String itemNo = ((idx + 1) * 10).toString()
+    int expected = (message.getProperty("itemCount") ?: "0").toString() as int
+    if (lines.size() != expected)
+        throw new IllegalStateException("Expected ${expected} priced lines but got ${lines.size()}")
 
-    BigDecimal qty   = new BigDecimal(message.getProperty("qty").toString())
-    BigDecimal price = new BigDecimal(p.price.toString())                     // USD
-    BigDecimal rate  = new BigDecimal(message.getProperty("fxRate").toString()) // USD -> order currency
+    BigDecimal total    = lines.collect { new BigDecimal(it.net.text()) }.inject(BigDecimal.ZERO) { a, b -> a + b }
+    BigDecimal totalUsd = lines.collect { new BigDecimal(it.netUsd.text()) }.inject(BigDecimal.ZERO) { a, b -> a + b }
 
-    if (p.stock != null && qty > new BigDecimal(p.stock.toString()))
-        throw new BusinessException("Product ${p.id} has insufficient stock (requested ${qty.toPlainString()}, available ${p.stock})", 409)
+    // business rule: order-value limit in the ORDER currency (externalized as MAX_ORDER_VALUE)
+    BigDecimal limit = new BigDecimal(message.getProperty("maxOrderValue").toString())
+    String cur = message.getProperty("orderCurrency")
+    if (total > limit)
+        throw new BusinessException("Order value exceeds the allowed limit of ${limit.setScale(2).toPlainString()} ${cur}", 409)
 
-    BigDecimal netUsd = qty.multiply(price).setScale(2, RoundingMode.HALF_UP)
-    BigDecimal net    = qty.multiply(price).multiply(rate).setScale(2, RoundingMode.HALF_UP)
-
-    message.setBody("<line>" +
-        "<itemNumber>${itemNo}</itemNumber>" +
-        "<productId>${XmlUtil.escapeXml(p.id.toString())}</productId>" +
-        "<sku>${XmlUtil.escapeXml((p.sku ?: '').toString())}</sku>" +
-        "<description>${XmlUtil.escapeXml((p.title ?: '').toString())}</description>" +
-        "<quantity>${qty.toPlainString()}</quantity>" +
-        "<unitPriceUsd>${price.toPlainString()}</unitPriceUsd>" +
-        "<netUsd>${netUsd.toPlainString()}</netUsd>" +
-        "<net>${net.toPlainString()}</net></line>")
+    def out = [
+        externalOrderId  : message.getProperty("businessKey"),
+        orderDate        : message.getProperty("orderDate"),
+        currency         : cur,
+        fxRate           : message.getProperty("fxRate"),
+        fxRateDate       : message.getProperty("fxDate"),
+        soldToParty      : [customerId: message.getProperty("soldTo"),
+                            name      : message.getProperty("custName"),
+                            shipTo    : [street: message.getProperty("shipStreet"), city: message.getProperty("shipCity"),
+                                         postalCode: message.getProperty("shipPostal"), country: message.getProperty("shipCountry")]],
+        items            : lines.collect { [itemNumber: it.itemNumber.text(), productId: it.productId.text(), sku: it.sku.text(),
+                                            description: it.description.text(), quantity: it.quantity.text(),
+                                            unitPriceUsd: it.unitPriceUsd.text(), netAmountUsd: it.netUsd.text(),
+                                            netAmount: it.net.text()] },
+        orderNetAmountUsd: totalUsd.setScale(2).toPlainString(),
+        orderNetAmount   : total.setScale(2).toPlainString()
+    ]
+    message.setProperty("UsdTotal", totalUsd.setScale(2).toPlainString())
+    message.setProperty("OrderTotal", total.setScale(2).toPlainString())
+    message.setBody(JsonOutput.toJson(out))
+    message.setHeader("Content-Type", "application/json")
     return message
 }

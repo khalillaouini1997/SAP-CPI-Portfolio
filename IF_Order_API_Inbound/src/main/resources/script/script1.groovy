@@ -72,3 +72,4 @@ def Message processData(Message message) {
         log.addCustomHeaderProperty("BusinessKey", extId)
     }
     return message
+}
