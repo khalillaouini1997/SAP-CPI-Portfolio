@@ -1,0 +1,5 @@
+#Tue Nov 10 10:45:12 UTC 2026
+DUMMYJSON_BASE=https\://dummyjson.com
+FX_BASE=https\://api.frankfurter.dev
+MAX_ORDER_VALUE=5000
+ORDERS_URL=https\://dummyjson.com/carts/add
